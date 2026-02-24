@@ -1,0 +1,45 @@
+@Library('jenkins-shared-lib') _
+
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_IMAGE = "rohitatole29/mean-backend"
+        FRONTEND_IMAGE = "rohitatole29/mean-frontend"
+        EC2_IP = "YOUR_EC2_IP"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/yourrepo.git'
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                dockerBuild(BACKEND_IMAGE, './backend')
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dockerBuild(FRONTEND_IMAGE, './frontend')
+            }
+        }
+
+        stage('Push Images') {
+            steps {
+                dockerPush(BACKEND_IMAGE)
+                dockerPush(FRONTEND_IMAGE)
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                dockerComposeDeploy('ubuntu', EC2_IP, 'crud-dd-task-mean-app')
+            }
+        }
+    }
+}
